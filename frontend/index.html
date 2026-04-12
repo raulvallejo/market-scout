@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Market Scout</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg:           #080810;
+      --surface:      #0f0f1a;
+      --surface-2:    #15151f;
+      --border:       rgba(255, 255, 255, 0.07);
+      --border-focus: rgba(99, 102, 241, 0.5);
+
+      --indigo:       #6366f1;
+      --indigo-dim:   rgba(99, 102, 241, 0.12);
+      --indigo-glow:  rgba(99, 102, 241, 0.25);
+
+      --green:        #10b981;
+      --green-dim:    rgba(16, 185, 129, 0.10);
+
+      --amber:        #f59e0b;
+      --amber-dim:    rgba(245, 158, 11, 0.10);
+
+      --violet:       #a78bfa;
+      --violet-dim:   rgba(167, 139, 250, 0.10);
+
+      --text-primary:   #f0f0f5;
+      --text-secondary: #8888aa;
+      --text-muted:     #444460;
+
+      --radius:    12px;
+      --radius-sm:  8px;
+      --radius-xs:  5px;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── Layout ─────────────────────────────────────────── */
+
+    .app {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 100vh;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+    }
+
+    .logo-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--indigo);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .logo-mark svg {
+      width: 18px;
+      height: 18px;
+      fill: #fff;
+    }
+
+    .logo-text {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+      color: var(--text-primary);
+    }
+
+    .logo-tag {
+      margin-left: auto;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--indigo);
+      background: var(--indigo-dim);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      padding: 3px 9px;
+      border-radius: 100px;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 0;
+      overflow: hidden;
+    }
+
+    /* ── Left panel ─────────────────────────────────────── */
+
+    .panel-left {
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 32px 28px;
+      gap: 28px;
+      background: var(--surface);
+      overflow-y: auto;
+    }
+
+    .panel-intro h1 {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.4px;
+      line-height: 1.3;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .panel-intro p {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-secondary);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 130px;
+      resize: vertical;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      padding: 12px 14px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+    textarea:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px var(--indigo-glow);
+    }
+
+    .examples-label {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .examples {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .example-chip {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+      text-align: left;
+    }
+
+    .example-chip:hover {
+      border-color: rgba(99, 102, 241, 0.3);
+      color: var(--text-primary);
+      background: var(--indigo-dim);
+    }
+
+    .btn-research {
+      width: 100%;
+      padding: 13px 20px;
+      background: var(--indigo);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      letter-spacing: -0.1px;
+    }
+
+    .btn-research:hover:not(:disabled) {
+      opacity: 0.88;
+    }
+
+    .btn-research:active:not(:disabled) {
+      transform: scale(0.985);
+    }
+
+    .btn-research:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .btn-research .spinner {
+      width: 15px;
+      height: 15px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ── Right panel ─────────────────────────────────────── */
+
+    .panel-right {
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      background: var(--bg);
+    }
+
+    /* Empty state */
+    .state-empty {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 48px;
+      text-align: center;
+    }
+
+    .state-empty .empty-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 4px;
+    }
+
+    .state-empty .empty-icon svg {
+      width: 24px;
+      height: 24px;
+      stroke: var(--text-muted);
+      fill: none;
+    }
+
+    .state-empty h2 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .state-empty p {
+      font-size: 13px;
+      color: var(--text-muted);
+      max-width: 280px;
+    }
+
+    /* Loading state */
+    .state-loading {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 48px;
+    }
+
+    .loading-ring {
+      width: 44px;
+      height: 44px;
+      border: 3px solid var(--border);
+      border-top-color: var(--indigo);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .loading-label {
+      font-size: 13.5px;
+      color: var(--text-secondary);
+    }
+
+    .loading-dots span {
+      animation: blink 1.2s infinite;
+    }
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes blink {
+      0%, 80%, 100% { opacity: 0.2; }
+      40% { opacity: 1; }
+    }
+
+    /* Error state */
+    .state-error {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 48px;
+      text-align: center;
+    }
+
+    .error-badge {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #f87171;
+      background: rgba(248, 113, 113, 0.1);
+      border: 1px solid rgba(248, 113, 113, 0.2);
+      padding: 4px 10px;
+      border-radius: 100px;
+    }
+
+    .error-message {
+      font-size: 14px;
+      color: var(--text-secondary);
+      max-width: 360px;
+      line-height: 1.6;
+    }
+
+    /* Results state */
+    .state-results {
+      display: flex;
+      flex-direction: column;
+      padding: 32px 36px;
+      gap: 32px;
+    }
+
+    /* Query echo */
+    .result-query {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .result-query .query-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+    }
+
+    .result-query .query-text {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+      line-height: 1.4;
+    }
+
+    /* Answer block */
+    .result-answer {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .result-answer-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-2);
+    }
+
+    .result-answer-header .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--indigo);
+      flex-shrink: 0;
+    }
+
+    .result-answer-header span {
+      font-size: 11.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+    }
+
+    .result-answer-body {
+      padding: 20px 18px;
+      font-size: 14.5px;
+      color: var(--text-primary);
+      line-height: 1.75;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* Reasoning trace */
+    .trace-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .trace-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .trace-header .trace-title {
+      font-size: 11.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+    }
+
+    .trace-header .trace-count {
+      font-size: 11px;
+      color: var(--text-muted);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 2px 7px;
+      border-radius: 100px;
+    }
+
+    .trace-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .step-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .step-index {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    /* Thought row */
+    .step-thought {
+      padding: 13px 16px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .step-thought-icon {
+      margin-top: 2px;
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .step-thought-icon svg {
+      width: 14px;
+      height: 14px;
+      stroke: var(--violet);
+      fill: none;
+    }
+
+    .step-thought-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .step-thought-label {
+      font-size: 10.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--violet);
+      margin-bottom: 4px;
+    }
+
+    .step-thought-text {
+      font-family: 'DM Mono', monospace;
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* Action row */
+    .step-action {
+      padding: 11px 16px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      border-bottom: 1px solid var(--border);
+      background: var(--amber-dim);
+    }
+
+    .step-action-icon {
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .step-action-icon svg {
+      width: 14px;
+      height: 14px;
+      stroke: var(--amber);
+      fill: none;
+    }
+
+    .step-action-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .step-action-label {
+      font-size: 10.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--amber);
+      margin-bottom: 4px;
+    }
+
+    .step-action-name {
+      font-family: 'DM Mono', monospace;
+      font-size: 11.5px;
+      color: var(--amber);
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      padding: 2px 7px;
+      border-radius: var(--radius-xs);
+      display: inline-block;
+      margin-bottom: 6px;
+    }
+
+    .step-action-input {
+      font-family: 'DM Mono', monospace;
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* Observation row */
+    .step-observation {
+      padding: 11px 16px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      background: var(--green-dim);
+    }
+
+    .step-observation-icon {
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .step-observation-icon svg {
+      width: 14px;
+      height: 14px;
+      stroke: var(--green);
+      fill: none;
+    }
+
+    .step-observation-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .step-observation-label {
+      font-size: 10.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--green);
+      margin-bottom: 4px;
+    }
+
+    .step-observation-text {
+      font-family: 'DM Mono', monospace;
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+
+    .step-observation-text::-webkit-scrollbar {
+      width: 4px;
+    }
+    .step-observation-text::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .step-observation-text::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    /* ── Scrollbars ─────────────────────────────────────── */
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.08);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255,255,255,0.14);
+    }
+
+    /* ── Responsive ─────────────────────────────────────── */
+
+    @media (max-width: 860px) {
+      main {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+        overflow: visible;
+      }
+
+      .panel-left {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        overflow: visible;
+      }
+
+      .panel-right {
+        min-height: 60vh;
+        overflow: visible;
+      }
+
+      .state-results {
+        padding: 24px 20px;
+      }
+
+      header {
+        padding: 14px 20px;
+      }
+    }
+
+    /* ── Utilities ──────────────────────────────────────── */
+
+    .hidden { display: none !important; }
+
+    .fade-in {
+      animation: fadeIn 0.25s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="logo-mark">
+      <!-- Compass / search icon -->
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 0l-2 7 7-2-5-5zm0 0l2 7-7-2 5-5z"/>
+      </svg>
+    </div>
+    <span class="logo-text">Market Scout</span>
+    <span class="logo-tag">ReAct Agent</span>
+  </header>
+
+  <main>
+
+    <!-- ── Left panel ── -->
+    <aside class="panel-left">
+
+      <div class="panel-intro">
+        <h1>Research any market.<br/>See every step.</h1>
+        <p>Ask a market research or PM question. The agent reasons, searches the web, and shows you its full thinking process.</p>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="form-group">
+        <label for="query-input">Your research question</label>
+        <textarea
+          id="query-input"
+          placeholder="e.g. What is the TAM for AI coding tools in 2024?"
+          rows="5"
+        ></textarea>
+      </div>
+
+      <div>
+        <p class="examples-label">Try an example</p>
+        <div class="examples">
+          <button class="example-chip" data-query="What is the TAM for AI coding tools in 2025?">What is the TAM for AI coding tools in 2025?</button>
+          <button class="example-chip" data-query="Who are the top competitors in the product analytics space?">Who are the top competitors in the product analytics space?</button>
+          <button class="example-chip" data-query="What are the fastest growing SaaS verticals right now?">What are the fastest growing SaaS verticals right now?</button>
+          <button class="example-chip" data-query="What pricing models do developer tools companies typically use?">What pricing models do developer tools companies typically use?</button>
+        </div>
+      </div>
+
+      <button class="btn-research" id="research-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        Research
+      </button>
+
+    </aside>
+
+    <!-- ── Right panel ── -->
+    <section class="panel-right" id="panel-right">
+
+      <!-- Empty state -->
+      <div class="state-empty" id="state-empty">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+          </svg>
+        </div>
+        <h2>No research yet</h2>
+        <p>Enter a market research question on the left to get started.</p>
+      </div>
+
+      <!-- Loading state -->
+      <div class="state-loading hidden" id="state-loading">
+        <div class="loading-ring"></div>
+        <p class="loading-label">Agent is reasoning<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span></p>
+      </div>
+
+      <!-- Error state -->
+      <div class="state-error hidden" id="state-error">
+        <span class="error-badge">Error</span>
+        <p class="error-message" id="error-message">Something went wrong. Please try again.</p>
+      </div>
+
+      <!-- Results state -->
+      <div class="state-results hidden fade-in" id="state-results">
+
+        <div class="result-query">
+          <span class="query-label">Question</span>
+          <p class="query-text" id="result-query-text"></p>
+        </div>
+
+        <div class="result-answer">
+          <div class="result-answer-header">
+            <div class="dot"></div>
+            <span>Answer</span>
+          </div>
+          <div class="result-answer-body" id="result-answer-body"></div>
+        </div>
+
+        <div class="trace-section" id="trace-section">
+          <div class="trace-header">
+            <span class="trace-title">Reasoning trace</span>
+            <span class="trace-count" id="trace-count">0 steps</span>
+          </div>
+          <div class="trace-steps" id="trace-steps"></div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+</div>
+
+<script>
+  const API_BASE = 'http://localhost:8000';
+
+  const queryInput   = document.getElementById('query-input');
+  const researchBtn  = document.getElementById('research-btn');
+  const exampleChips = document.querySelectorAll('.example-chip');
+
+  const stateEmpty   = document.getElementById('state-empty');
+  const stateLoading = document.getElementById('state-loading');
+  const stateError   = document.getElementById('state-error');
+  const stateResults = document.getElementById('state-results');
+  const errorMessage = document.getElementById('error-message');
+
+  const resultQueryText  = document.getElementById('result-query-text');
+  const resultAnswerBody = document.getElementById('result-answer-body');
+  const traceSection     = document.getElementById('trace-section');
+  const traceSteps       = document.getElementById('trace-steps');
+  const traceCount       = document.getElementById('trace-count');
+
+  // ── State helpers ──────────────────────────────────────────────────────
+
+  function showState(name) {
+    stateEmpty.classList.add('hidden');
+    stateLoading.classList.add('hidden');
+    stateError.classList.add('hidden');
+    stateResults.classList.add('hidden');
+
+    if (name === 'empty')   stateEmpty.classList.remove('hidden');
+    if (name === 'loading') stateLoading.classList.remove('hidden');
+    if (name === 'error')   stateError.classList.remove('hidden');
+    if (name === 'results') {
+      stateResults.classList.remove('hidden');
+      stateResults.classList.remove('fade-in');
+      // Force reflow so animation re-triggers
+      void stateResults.offsetWidth;
+      stateResults.classList.add('fade-in');
+    }
+  }
+
+  // ── Rendering ──────────────────────────────────────────────────────────
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function renderStep(step, index) {
+    const card = document.createElement('div');
+    card.className = 'step-card fade-in';
+    card.style.animationDelay = `${index * 60}ms`;
+
+    card.innerHTML = `
+      <div class="step-thought">
+        <div class="step-thought-icon">
+          <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+          </svg>
+        </div>
+        <div class="step-thought-content">
+          <div class="step-thought-label">Thought</div>
+          <div class="step-thought-text">${escapeHtml(step.thought || '—')}</div>
+        </div>
+      </div>
+
+      <div class="step-action">
+        <div class="step-action-icon">
+          <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m13 2-2 2.5h3L12 7"/><path d="M10 14c.5.5 1 .8 2 1"/><path d="m16 13-.5 2.5 2.5.5"/><path d="M21 8a2 2 0 0 0-2-2h-1a5 5 0 0 0-5 5 3 3 0 0 0 3 3 3 3 0 0 0 3-3 5 5 0 0 0-1-3"/><path d="M3 8a2 2 0 0 1 2-2h1a5 5 0 0 1 5 5 3 3 0 0 1-3 3 3 3 0 0 1-3-3 5 5 0 0 1 1-3"/>
+          </svg>
+        </div>
+        <div class="step-action-content">
+          <div class="step-action-label">Action</div>
+          <span class="step-action-name">${escapeHtml(step.action || 'search')}</span>
+          <div class="step-action-input">${escapeHtml(step.action_input || '—')}</div>
+        </div>
+      </div>
+
+      <div class="step-observation">
+        <div class="step-observation-icon">
+          <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+          </svg>
+        </div>
+        <div class="step-observation-content">
+          <div class="step-observation-label">Observation</div>
+          <div class="step-observation-text">${escapeHtml(step.observation || '—')}</div>
+        </div>
+      </div>
+    `;
+
+    return card;
+  }
+
+  function renderResults(query, data) {
+    resultQueryText.textContent = query;
+    resultAnswerBody.textContent = data.result || 'No answer returned.';
+
+    traceSteps.innerHTML = '';
+
+    const steps = Array.isArray(data.steps) ? data.steps : [];
+
+    if (steps.length === 0) {
+      traceSection.classList.add('hidden');
+    } else {
+      traceSection.classList.remove('hidden');
+      traceCount.textContent = `${steps.length} step${steps.length !== 1 ? 's' : ''}`;
+      steps.forEach((step, i) => {
+        traceSteps.appendChild(renderStep(step, i));
+      });
+    }
+
+    showState('results');
+    // Scroll results panel to top
+    document.getElementById('panel-right').scrollTop = 0;
+  }
+
+  // ── API call ───────────────────────────────────────────────────────────
+
+  async function runResearch(query) {
+    const sessionId = crypto.randomUUID();
+
+    showState('loading');
+    researchBtn.disabled = true;
+    researchBtn.innerHTML = `<div class="spinner"></div> Researching…`;
+
+    try {
+      const response = await fetch(`${API_BASE}/api/research`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, session_id: sessionId }),
+      });
+
+      if (!response.ok) {
+        let detail = `Request failed (${response.status})`;
+        try {
+          const err = await response.json();
+          if (err.detail) detail = err.detail;
+        } catch (_) {}
+        throw new Error(detail);
+      }
+
+      const data = await response.json();
+      renderResults(query, data);
+
+    } catch (err) {
+      errorMessage.textContent = err.message || 'Unexpected error. Is the backend running?';
+      showState('error');
+    } finally {
+      researchBtn.disabled = false;
+      researchBtn.innerHTML = `
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        Research`;
+    }
+  }
+
+  // ── Event listeners ────────────────────────────────────────────────────
+
+  researchBtn.addEventListener('click', () => {
+    const query = queryInput.value.trim();
+    if (!query) {
+      queryInput.focus();
+      return;
+    }
+    runResearch(query);
+  });
+
+  queryInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      const query = queryInput.value.trim();
+      if (query) runResearch(query);
+    }
+  });
+
+  exampleChips.forEach((chip) => {
+    chip.addEventListener('click', () => {
+      queryInput.value = chip.dataset.query;
+      queryInput.focus();
+    });
+  });
+</script>
+</body>
+</html>
