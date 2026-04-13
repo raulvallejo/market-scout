@@ -677,6 +677,53 @@
       border-radius: 2px;
     }
 
+    .obs-result-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .obs-result-card {
+      background: rgba(16, 185, 129, 0.05);
+      border: 1px solid rgba(16, 185, 129, 0.15);
+      border-radius: var(--radius-xs);
+      padding: 9px 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .obs-result-title {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.4;
+    }
+
+    .obs-result-url {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--indigo);
+      text-decoration: none;
+      word-break: break-all;
+      opacity: 0.85;
+    }
+
+    .obs-result-url:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+
+    .obs-result-snippet {
+      font-family: 'DM Mono', monospace;
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-top: 2px;
+    }
+
     /* ── Scrollbars ─────────────────────────────────────── */
 
     ::-webkit-scrollbar { width: 6px; }
@@ -892,6 +939,87 @@
       .replace(/"/g, '&quot;');
   }
 
+  function cleanActionInput(text) {
+    // Remove lines that start with "(" (e.g. "(I'll wait...)" artefacts)
+    return (text || '—')
+      .split('\n')
+      .filter(line => !line.trimStart().startsWith('('))
+      .join('\n')
+      .trim() || '—';
+  }
+
+  function cleanThought(text) {
+    // Strip trailing "Action: ...\nAction Input: ..." that LangChain sometimes leaves in the log
+    return (text || '').replace(/\n?Action:[\s\S]*/i, '').trim() || '—';
+  }
+
+  function renderObservation(raw) {
+    // If the backend already parsed this into an array, use it directly
+    if (raw && typeof raw === 'object' && Array.isArray(raw)) {
+      const results = raw.filter(r => r && r.url);
+      if (results.length > 0) return renderObservationCards(results);
+    }
+
+    const text = (raw == null) ? '—' : String(raw);
+
+    // Try to parse Python-style list-of-dicts that Tavily returns.
+    // Handles both clean arrays and mixed text with an embedded array
+    // e.g. "Some prefix text [{'title': '...', 'url': '...', 'content': '...'}]"
+    let results = null;
+
+    function tryParse(candidate) {
+      if (typeof candidate !== 'string') return null;
+      const json = candidate
+        .replace(/'/g, '"')
+        .replace(/None/g, 'null')
+        .replace(/True/g, 'true')
+        .replace(/False/g, 'false');
+      const parsed = JSON.parse(json);
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].url) {
+        return parsed;
+      }
+      return null;
+    }
+
+    try {
+      // First try the whole string
+      results = tryParse(text);
+    } catch (_) {}
+
+    if (!results) {
+      // Extract the first "[{" to last "}]" substring and try that
+      const match = typeof text === 'string' ? text.match(/(\[+\{[\s\S]*\}+\])/) : null;
+      if (match) {
+        try {
+          const normalized = match[1].replace(/^\[\[/, '[').replace(/\]\]$/, ']');
+          results = tryParse(normalized);
+        } catch (_) {}
+      }
+    }
+
+    if (!results) {
+      return `<div class="step-observation-text">${escapeHtml(text)}</div>`;
+    }
+
+    return renderObservationCards(results);
+  }
+
+  function renderObservationCards(results) {
+    const cards = results.map(r => {
+      const title   = escapeHtml(r.title   || 'Result');
+      const url     = escapeHtml(r.url     || '');
+      const snippet = escapeHtml((r.content || '').slice(0, 200));
+      return `
+        <div class="obs-result-card">
+          <div class="obs-result-title">${title}</div>
+          <a class="obs-result-url" href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>
+          <div class="obs-result-snippet">${snippet}${(r.content || '').length > 200 ? '…' : ''}</div>
+        </div>`;
+    }).join('');
+
+    return `<div class="obs-result-list">${cards}</div>`;
+  }
+
   function renderStep(step, index) {
     const card = document.createElement('div');
     card.className = 'step-card fade-in';
@@ -906,7 +1034,7 @@
         </div>
         <div class="step-thought-content">
           <div class="step-thought-label">Thought</div>
-          <div class="step-thought-text">${escapeHtml(step.thought || '—')}</div>
+          <div class="step-thought-text">${escapeHtml(cleanThought(step.thought))}</div>
         </div>
       </div>
 
@@ -919,7 +1047,7 @@
         <div class="step-action-content">
           <div class="step-action-label">Action</div>
           <span class="step-action-name">${escapeHtml(step.action || 'search')}</span>
-          <div class="step-action-input">${escapeHtml(step.action_input || '—')}</div>
+          <div class="step-action-input">${escapeHtml(cleanActionInput(step.action_input))}</div>
         </div>
       </div>
 
@@ -931,7 +1059,7 @@
         </div>
         <div class="step-observation-content">
           <div class="step-observation-label">Observation</div>
-          <div class="step-observation-text">${escapeHtml(step.observation || '—')}</div>
+          ${renderObservation(step.observation)}
         </div>
       </div>
     `;
@@ -952,7 +1080,7 @@
     } else {
       traceSection.classList.remove('hidden');
       traceCount.textContent = `${steps.length} step${steps.length !== 1 ? 's' : ''}`;
-      steps.forEach((step, i) => {
+      steps.filter(step => step.action !== '_Exception').forEach((step, i) => {
         traceSteps.appendChild(renderStep(step, i));
       });
     }

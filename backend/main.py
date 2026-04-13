@@ -100,16 +100,20 @@ Structure your final answer with:
 You have access to the following tools:
 {tools}
 
-Use the following format strictly:
+You have these tool names available: {tool_names}
 
-Question: the input question you must answer
-Thought: reason about what you need to find
-Action: the action to take, should be one of [{tool_names}]
-Action Input: the input to the action
-Observation: the result of the action
-... (this Thought/Action/Action Input/Observation can repeat N times)
+IMPORTANT: You MUST always follow this exact format. Never deviate:
+
+Thought: your reasoning here
+Action: tavily_search_results_json
+Action Input: your search query here
+Observation: (this will be filled in automatically)
+
+When you have enough information:
 Thought: I now know the final answer
-Final Answer: the final answer to the original input question
+Final Answer: your complete structured answer here
+
+STOP RULE: As soon as you have enough information to answer all parts of the question, write "Final Answer:" immediately. Do not search again if you already have the data.
 
 Begin!
 
@@ -187,7 +191,7 @@ def run_research_agent(query: str, session_id: str) -> ResearchResponse:
         verbose=False,
         return_intermediate_steps=True,
         handle_parsing_errors=True,
-        max_iterations=6,
+        max_iterations=8,
     )
 
     output = executor.invoke({"input": query})
