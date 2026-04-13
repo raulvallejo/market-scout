@@ -6,6 +6,10 @@ Market Scout is a PM research agent that answers market research questions step 
 
 The goal is a lightweight, transparent research tool — not a black-box answer machine. Every step the agent takes (thought, search query, observation) is surfaced in the response.
 
+**Live URLs**
+- Frontend: https://market-scout-gamma.vercel.app
+- Backend: https://market-scout-405j.onrender.com
+
 ---
 
 ## Architecture
@@ -109,12 +113,17 @@ Pattern: same approach used in `pm-1pager-generator`. A short system prompt asks
 3. **Always update `requirements.txt`** after every `pip install`. Run `pip freeze > requirements.txt` or add the package manually with a pinned version.
 4. **One backend file, one frontend file** — resist the urge to split unless complexity genuinely demands it.
 5. **Guardrail runs before the agent** — no query reaches the ReAct agent without passing validation first.
+6. **Never use Python 3.14 on Render** — always pin to 3.11.0.
+7. **Never set `allow_credentials=True` with `allow_origins=["*"]`** — use `False` or specify exact origins.
 
 ---
 
 ## Known Gotchas
 
-_None yet — this section will be updated as we build and hit issues._
+- **Python 3.14 incompatibility** — Render defaults to Python 3.14, which is incompatible with langchain and pydantic. Always pin to 3.11.0 via the `PYTHON_VERSION` env var and a `.python-version` file.
+- **CORS credentials + wildcard origin** — `allow_credentials=True` is invalid when `allow_origins=["*"]`. Browsers (Safari in particular) will block requests. Use `allow_credentials=False` or specify exact origins.
+- **Safari is stricter than Chrome on CORS** — always test on Safari before shipping.
+- **Vercel serves the committed repo** — if `index.html` has the wrong API URL locally but wasn't committed, Vercel will serve the old version. Always commit before pushing to verify the deployed state.
 
 ---
 
