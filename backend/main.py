@@ -206,7 +206,7 @@ def run_research_agent(query: str, session_id: str) -> ResearchResponse:
 # Endpoints
 # ---------------------------------------------------------------------------
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def health_check():
     return {"status": "ok"}
 
