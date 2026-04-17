@@ -135,6 +135,40 @@ class ResearchResponse(BaseModel):
     session_id: str
 
 
+# A2A models
+class A2AMessagePart(BaseModel):
+    text: str
+
+
+class A2AMessage(BaseModel):
+    role: str
+    parts: list[A2AMessagePart]
+
+
+class A2ATaskRequest(BaseModel):
+    id: str
+    message: A2AMessage
+
+
+class A2AStatus(BaseModel):
+    state: str
+
+
+class A2AResultPart(BaseModel):
+    text: str
+
+
+class A2AResult(BaseModel):
+    role: str
+    parts: list[A2AResultPart]
+
+
+class A2ATaskResponse(BaseModel):
+    id: str
+    status: A2AStatus
+    result: A2AResult
+
+
 # ---------------------------------------------------------------------------
 # Guardrail
 # ---------------------------------------------------------------------------
@@ -221,3 +255,88 @@ def research(req: ResearchRequest):
 
     # 2. ReAct agent
     return run_research_agent(req.query, req.session_id)
+
+
+# ---------------------------------------------------------------------------
+# A2A endpoints
+# ---------------------------------------------------------------------------
+
+@app.get("/.well-known/agent.json")
+def agent_card():
+    return {
+        "name": "Market Scout",
+        "description": (
+            "A PM research agent that answers market research questions using the ReAct pattern. "
+            "Given a question, it autonomously searches the web and returns a structured answer "
+            "with supporting data points and sources."
+        ),
+        "url": "https://market-scout-405j.onrender.com",
+        "version": "1.0.0",
+        "capabilities": {
+            "streaming": False,
+            "pushNotifications": False,
+        },
+        "defaultInputModes": ["text/plain"],
+        "defaultOutputModes": ["text/plain"],
+        "skills": [
+            {
+                "id": "market_research",
+                "name": "Market Research",
+                "description": (
+                    "Answers market research questions — market size, competitors, "
+                    "pricing models, industry trends, growth rates."
+                ),
+                "tags": ["market research", "competitive analysis", "product management"],
+                "examples": [
+                    "What is the market size for AI observability tools in 2025?",
+                    "Who are the top 3 competitors in the product analytics space?",
+                    "What pricing models do developer tools companies typically use?",
+                ],
+            }
+        ],
+    }
+
+
+@_safe_track(name="a2a_task")
+def _run_a2a_task(task_id: str, query: str) -> A2ATaskResponse:
+    """Execute an A2A task — guardrail + ReAct agent — and return an A2A response."""
+    try:
+        check_guardrail(query)
+    except HTTPException as exc:
+        return A2ATaskResponse(
+            id=task_id,
+            status=A2AStatus(state="failed"),
+            result=A2AResult(role="agent", parts=[A2AResultPart(text=exc.detail)]),
+        )
+    except Exception as exc:
+        return A2ATaskResponse(
+            id=task_id,
+            status=A2AStatus(state="failed"),
+            result=A2AResult(role="agent", parts=[A2AResultPart(text=f"Guardrail error: {exc}")]),
+        )
+
+    try:
+        research_result = run_research_agent(query, session_id="")
+        return A2ATaskResponse(
+            id=task_id,
+            status=A2AStatus(state="completed"),
+            result=A2AResult(role="agent", parts=[A2AResultPart(text=research_result.result)]),
+        )
+    except Exception as exc:
+        return A2ATaskResponse(
+            id=task_id,
+            status=A2AStatus(state="failed"),
+            result=A2AResult(role="agent", parts=[A2AResultPart(text=f"Agent error: {exc}")]),
+        )
+
+
+@app.post("/a2a/tasks/send", response_model=A2ATaskResponse)
+def a2a_tasks_send(req: A2ATaskRequest):
+    query = req.message.parts[0].text if req.message.parts else ""
+    if not query.strip():
+        return A2ATaskResponse(
+            id=req.id,
+            status=A2AStatus(state="failed"),
+            result=A2AResult(role="agent", parts=[A2AResultPart(text="No query text provided.")]),
+        )
+    return _run_a2a_task(req.id, query)

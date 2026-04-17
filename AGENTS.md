@@ -43,6 +43,44 @@ Structured response
 
 ---
 
+### A2A Protocol
+
+Market Scout implements the **Agent-to-Agent (A2A) protocol** by Google. In addition to serving human users via the UI, Market Scout acts as an A2A server — it exposes an Agent Card and a task endpoint so other agents can discover and call it programmatically.
+
+**New endpoints:**
+- `GET /.well-known/agent.json` — Agent Card descriptor (tells other agents what Market Scout can do and how to call it)
+- `POST /a2a/tasks/send` — accepts A2A tasks from other agents
+
+**A2A request format:**
+```json
+{
+  "id": "<task_id>",
+  "message": {
+    "role": "user",
+    "parts": [{"text": "<question>"}]
+  }
+}
+```
+
+**A2A response format:**
+```json
+{
+  "id": "<task_id>",
+  "status": {"state": "completed"},
+  "result": {
+    "role": "agent",
+    "parts": [{"text": "<answer>"}]
+  }
+}
+```
+
+**Implementation notes:**
+- The existing `run_research_agent()` function is reused — same guardrail, same ReAct loop, same OPIK tracking
+- A2A calls are tracked as OPIK spans with `name="a2a_task"`
+- **Critical:** the existing `/api/research` endpoint and UI are not affected — Market Scout serves both humans (via UI) and agents (via A2A) simultaneously
+
+---
+
 ## Stack
 
 | Layer | Technology |
