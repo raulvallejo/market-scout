@@ -79,6 +79,13 @@ Market Scout implements the **Agent-to-Agent (A2A) protocol** by Google. In addi
 - A2A calls are tracked as OPIK spans with `name="a2a_task"`
 - **Critical:** the existing `/api/research` endpoint and UI are not affected — Market Scout serves both humans (via UI) and agents (via A2A) simultaneously
 
+**Production status:**
+- Production A2A endpoints now live:
+  - Agent Card: https://market-scout-405j.onrender.com/.well-known/agent.json
+  - Task endpoint: https://market-scout-405j.onrender.com/a2a/tasks/send
+- Known gotcha: HEAD requests from UptimeRobot caused 502s — fixed by using `@app.api_route("/", methods=["GET", "HEAD"])` on the health check
+- A2A tested end-to-end in production with PM 1-Pager Generator as the client — working correctly
+
 ---
 
 ## Stack
