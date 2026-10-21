@@ -62,13 +62,11 @@ groq_guardrail_client = ChatGroq(
     temperature=0.2,
 )
 
-# Agent: streaming=False prevents gpt-oss-120b from activating its built-in
-# tools (browser/code), which clash with LangChain ReAct tool calling.
+# Agent: qwen3.8-27b supports standard tool use without built-in tool conflicts.
 groq_agent_client = ChatGroq(
-    model="openai/gpt-oss-120b",
+    model="qwen/qwen3.8-27b",
     api_key=_groq_api_key,
     temperature=0.2,
-    streaming=False,
 )
 
 tavily_tool = TavilySearchResults(
