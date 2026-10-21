@@ -16,7 +16,6 @@ from langchain.agents.agent import AgentExecutor
 from langchain.prompts import PromptTemplate
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_groq import ChatGroq
-from langchain_openai import ChatOpenAI
 
 # ---------------------------------------------------------------------------
 # OPIK — configured exclusively via env vars; never call opik.configure()
@@ -54,16 +53,22 @@ app.add_middleware(
 # All llama models deprecated on Groq; gpt-oss-120b conflicts with LangChain
 # ReAct tool calling (its built-in tools can't be disabled via the SDK).
 # Agent uses OpenAI directly (gpt-4o-mini) which has clean tool use support.
+_groq_api_key = os.environ["GROQ_API_KEY"]
+
+# Guardrail: plain text, no tools needed.
 groq_guardrail_client = ChatGroq(
     model="openai/gpt-oss-20b",
-    api_key=os.environ["GROQ_API_KEY"],
+    api_key=_groq_api_key,
     temperature=0.2,
 )
 
-openai_agent_client = ChatOpenAI(
-    model="gpt-4o-mini",
-    api_key=os.environ["OPENAI_API_KEY"],
+# Agent: streaming=False prevents gpt-oss-120b from activating its built-in
+# tools (browser/code), which clash with LangChain ReAct tool calling.
+groq_agent_client = ChatGroq(
+    model="openai/gpt-oss-120b",
+    api_key=_groq_api_key,
     temperature=0.2,
+    streaming=False,
 )
 
 tavily_tool = TavilySearchResults(
@@ -225,7 +230,7 @@ def run_research_agent(query: str, session_id: str) -> ResearchResponse:
     prompt = PromptTemplate.from_template(REACT_SYSTEM)
 
     agent = create_react_agent(
-        llm=openai_agent_client,
+        llm=groq_agent_client,
         tools=[tavily_tool],
         prompt=prompt,
     )
