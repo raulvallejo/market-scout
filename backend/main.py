@@ -50,7 +50,7 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 
 groq_client = ChatGroq(
-    model="moonshotai/kimi-k2-instruct",
+    model="llama-3.3-70b-versatile",
     api_key=os.environ["GROQ_API_KEY"],
     temperature=0.2,
 )
