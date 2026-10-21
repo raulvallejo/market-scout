@@ -49,10 +49,23 @@ app.add_middleware(
 # Shared clients (initialised once at startup)
 # ---------------------------------------------------------------------------
 
-groq_client = ChatGroq(
-    model="llama-3.1-8b-instant",
-    api_key=os.environ["GROQ_API_KEY"],
+# Groq: only openai/gpt-oss-* models are currently available.
+# gpt-oss-20b for the guardrail (plain text, no tools needed — fast + cheap).
+# gpt-oss-120b for the ReAct agent; disable_builtin_tools prevents Groq from
+# activating its native browser/code tools which clash with LangChain tool use.
+_groq_api_key = os.environ["GROQ_API_KEY"]
+
+groq_guardrail_client = ChatGroq(
+    model="openai/gpt-oss-20b",
+    api_key=_groq_api_key,
     temperature=0.2,
+)
+
+groq_agent_client = ChatGroq(
+    model="openai/gpt-oss-120b",
+    api_key=_groq_api_key,
+    temperature=0.2,
+    model_kwargs={"disable_builtin_tools": True},
 )
 
 tavily_tool = TavilySearchResults(
@@ -176,7 +189,7 @@ class A2ATaskResponse(BaseModel):
 def check_guardrail(query: str) -> None:
     """Raise HTTP 400 if the query is not allowed.  Uses Groq directly."""
     prompt = GUARDRAIL_SYSTEM.format(query=query)
-    response = groq_client.invoke(prompt)
+    response = groq_guardrail_client.invoke(prompt)
     verdict = response.content.strip()
 
     if not verdict.startswith("ALLOWED"):
@@ -214,7 +227,7 @@ def run_research_agent(query: str, session_id: str) -> ResearchResponse:
     prompt = PromptTemplate.from_template(REACT_SYSTEM)
 
     agent = create_react_agent(
-        llm=groq_client,
+        llm=groq_agent_client,
         tools=[tavily_tool],
         prompt=prompt,
     )
