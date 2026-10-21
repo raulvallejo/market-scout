@@ -63,10 +63,12 @@ groq_guardrail_client = ChatGroq(
 )
 
 # Agent: qwen3.8-27b supports standard tool use without built-in tool conflicts.
+# max_tokens=800 keeps us under the free-tier OTPM limit (1000).
 groq_agent_client = ChatGroq(
     model="qwen/qwen3.8-27b",
     api_key=_groq_api_key,
     temperature=0.2,
+    max_tokens=800,
 )
 
 tavily_tool = TavilySearchResults(
@@ -239,7 +241,7 @@ def run_research_agent(query: str, session_id: str) -> ResearchResponse:
         verbose=False,
         return_intermediate_steps=True,
         handle_parsing_errors=True,
-        max_iterations=8,
+        max_iterations=4,
     )
 
     output = executor.invoke({"input": query})
