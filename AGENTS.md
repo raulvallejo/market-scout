@@ -93,7 +93,8 @@ Market Scout implements the **Agent-to-Agent (A2A) protocol** by Google. In addi
 | Layer | Technology |
 |---|---|
 | Backend framework | FastAPI (Python) |
-| LLM | Groq — `llama-3.3-70b-versatile` |
+| LLM (guardrail) | Groq — `openai/gpt-oss-20b` |
+| LLM (agent) | OpenAI — `gpt-4o-mini` |
 | Agent pattern | LangChain ReAct agent |
 | Web search tool | Tavily Search API |
 | Observability | OPIK |
